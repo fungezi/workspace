@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>VIDEO AND AUDIO</title>
+	<link rel="stylesheet" type="text/css" href="font-awesome-4.7.0/css/font-awesome.min.css">
+	<style type="text/css">
+body {
+	padding: 0;
+	margin: 0;
+	font-family: 'microsoft yahei', 'Helvetica', simhei, simsun, sans-serif;
+	background-color: #F7F7F7;
+}
+
+a {
+	text-decoration: none;
+}
+
+figcaption {
+	font-size: 24px;
+	text-align: center;
+	margin: 20px;
+}
+
+.player {
+	width: 720px;
+	height: 360px;
+	margin: 0 auto;
+	background: #000 url(http://duni.sinaapp.com/demo/html-css/HTML5%E8%A7%86%E9%A2%91API%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/images/loading.gif) center/300px no-repeat;
+	position: relative;
+}
+
+video {
+	display: none;
+	height: 100%;
+	margin: 0 auto;
+}
+
+.controls {
+	width: 720px;
+	height: 40px;
+	background-color: #2196F3;
+	position: absolute;
+	left: 0;
+	bottom: -40px;
+	z-index: 99;
+	opacity: 0.7;
+}
+
+.player:hover .controls {
+	opacity: 1;
+}
+
+/*播放/暂停*/
+.controls .switch {
+	display: block;
+	width: 20px;
+	height: 20px;
+	font-size: 20px;
+	color: #FFF;
+	position: absolute;
+	top: 11px;
+	left: 11px;
+}
+.controls .switch:hover {
+	color: blue;
+}
+
+/*全屏按钮*/
+.controls .expand {
+	display: block;
+	width: 20px;
+	height: 20px;
+	font-size: 20px;
+	color: #FFF;
+	position: absolute;
+	right: 11px;
+	top: 11px;
+}
+.controls .expand:hover {
+	color: blue;
+}
+
+/*进度条*/
+.progress {
+	width: 430px;
+	height: 10px;
+	border-radius: 3px;
+	overflow: hidden;
+	background-color: #555;
+	cursor: pointer;
+	position: absolute;
+	top: 16px;
+	left: 45px;
+}
+
+/*下载进度*/
+.progress .loaded {
+	width: 0;
+	height: 100%;
+	background-color: blue;
+}
+
+/*播放进度*/
+.progress .line {
+	width: 0;
+	height: 100%;
+	background-color: #FFF;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+/**/
+.progress .bar {
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	position: absolute;
+	left: 0;
+	top: 0;
+	z-index: 1;
+}
+
+/*时间*/
+.timer {
+	height: 20px;
+	line-height: 20px;
+	position: absolute;
+	left: 490px;
+	top: 11px;
+	color: #FFF;
+	font-size: 14px;
+}
+
+.download {
+	margin-top: 50px;
+    text-align: center;
+}
+	</style>
+</head>
+<body>
+<div class="video">
+	<h3>这是video实例</h3>
+	<figure>
+    <figcaption><h1>视频播放器</h1></figcaption>
+    <div class="player">
+        <video src="cs.mp4" poster="cs.jpeg" width="500"></video>
+        <div class="controls">
+            <!-- 播放/暂停 -->
+            <a href="javascript:;" class="switch fa fa-play"></a>
+            <!-- 全屏 -->
+            <a href="javascript:;" class="expand fa fa-expand"></a>
+            <!-- 进度条 -->
+            <div class="progress">
+                <div class="loaded"></div>
+                <div class="line"></div>
+                <div class="bar"></div>  
+            </div>
+            <!-- 时间 -->
+            <div class="timer">
+                <span class="current">00:00:00</span> /
+                <span class="total">00:00:00</span>
+            </div>
+            <!-- 声音 -->
+        </div>
+    </div>
+    <div class="download">
+        <a href="http://pan.baidu.com/s/1jIyJ06y" target="_blank">下载</a>
+    </div>
+</figure>
+
+
+<script type="text/javascript">
+    var video = document.querySelector("video");
+    var isPlay = document.querySelector(".switch");
+    var expand = document.querySelector(".expand");
+    var progress = document.querySelector(".progress");
+    var loaded = document.querySelector(".progress > .loaded");
+    var currPlayTime = document.querySelector(".timer > .current");
+    var totalTime = document.querySelector(".timer > .total");
+
+    //当视频可播放的时候
+    video.oncanplay = function(){
+        //显示视频
+        this.style.display = "block";
+        //显示视频总时长
+        totalTime.innerHTML = getFormatTime(this.duration);//this.duration代表的是视频总时长
+    };
+
+    //播放按钮控制
+    isPlay.onclick = function(){
+        if(video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
+        this.classList.toggle("fa-pause");
+    };
+
+    //全屏
+    expand.onclick = function(){
+        video.webkitRequestFullScreen();
+    };
+
+    //播放进度
+    video.ontimeupdate = function(){//当在播放的时候触发
+        var currTime = this.currentTime,    //当前播放时间
+            duration = this.duration;       // 视频总时长
+        //百分比
+        var pre = currTime / duration * 100 + "%";
+        //显示进度条
+        loaded.style.width = pre;
+
+        //显示当前播放进度时间
+        currPlayTime.innerHTML = getFormatTime(currTime);
+    };
+
+    //跳跃播放
+    progress.onclick = function(e){//通过计算得到跳跃播放的时间，当时间被改变之后就可以播放这个时间的视频了
+        var event = e || window.event;
+        video.currentTime = (event.offsetX / this.offsetWidth) * video.duration;
+    };
+
+    //播放完毕还原设置
+    video.onended = function(){//播放结束的时候触发
+        //切换播放按钮状态
+        isPlay.classList.remove("fa-pause");
+        isPlay.classList.add("fa-play");
+        //进度条为0
+        loaded.style.width = 0;
+        //还原当前播放时间
+        currPlayTime.innerHTML = getFormatTime();
+        //视频恢复到播放开始状态
+        video.currentTime = 0;
+    };
+
+    function getFormatTime(time) {//转换时间的格式
+        var time = time || 0;
+        var h = parseInt(time/3600),
+            m = parseInt(time%3600/60),
+            s = parseInt(time%60);
+        h = h < 10 ? "0"+h : h;
+        m = m < 10 ? "0"+m : m;
+        s = s < 10 ? "0"+s : s;
+
+        return h+":"+m+":"+s;
+    }
+</script>
+</body>
+</html>
