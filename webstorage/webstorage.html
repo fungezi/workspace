@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>webstorage</title>
+</head>
+<script type="text/javascript">
+	//websocket的  两  个方法，  三  个事件监听
+	// websocket函数：
+	var websocket;
+	function connect(){
+		try{
+			var readyState = new Array("正在连接","已建立连接","正在关闭连接","连接已关闭");
+			var host = "ws://localhost:8080/socket";
+			websocket = new WebSocket(host);
+			var message = "这是一条消息";
+			//以下是创建的三个事件监听
+			websocket.onopen = function(){//监听建立连接的时候
+				console.log(readyState[websocket.readyState]);
+			}
+			websocket.onmessage = function(msg){//监听有信息发送过来时
+				console.log(msg.data);
+			}
+			websocket.onclose = function(){//监听连接断开的时候
+				console.log(readyState[websocket.readyState]);
+			}
+		}catch(exception){
+			console.log("发生错误");
+		}
+	}
+
+	function send(){
+		try{
+			websocket.send("这是一条消息");//发送一条消息
+			//这里需要注意的是send函数的参数必须是文本内容，否则就需要JSON.toStringify来转换成string。对于发送过来的数据通过JSON.parse转换
+		}catch(exception){
+			console.log("发生错误");
+		}
+	}
+
+	function dsiconnect(){
+		websocket.close();//断开连接
+	}
+</script>
+<script type="text/javascript">
+	var EventTarget = function(){
+		this._listener = {};
+	}
+	EventTarget.prototype = {
+		constructor: EventTarget,
+		addListener: function(type,listener){
+			if(typeof this._listener[type] == "undefined"){
+				this._listener[type] = [];
+			}
+			this._listener[type].push(listener);
+		},
+		fire: function(event){//这就是触发事件的引线
+			if(typeof event == "string"){
+				event = {
+					type: event,
+				}
+			}
+			if(!event.target){
+				event.target = this;
+			}
+			if(!event.type){
+				throw new Error("缺少事件类型");
+			}
+			if(this._listener[event.type] instanceof Array){
+
+				for(var i = 0,len;len = this._listener[event.type].length , i < len;i++){
+					this._listener[event.type][i].call(this,event);
+				}
+			}
+		},
+		removeListener: function(event){//移除事件
+
+		}
+	}
+	var EventObj = function(){//这就相当于DOM了  需要继承EventTarget
+
+	}
+	EventObj.prototype = new EventTarget();
+	EventObj.prototype.constructor = EventObj;
+	EventObj.prototype.foo = function(){
+		this.fire("foo");
+	}
+
+	var mineObj = new EventObj();
+	mineObj.addListener("foo",function(){
+		alert(111);
+	})
+	mineObj.foo();
+	console.log(mineObj._listener)
+
+</script>
+<body>
+<p>web storage 是啥？</p>
+<p>
+	是一个类似于h4里面的cookies的东西，但是cookies却是有许多的缺点的：
+		1.大小：cookies的大小被限制在4KB 。
+		2.复杂性 。
+		3.带宽。
+</p>
+<p>
+	webstorage 顾名思义就是在web上存储数据：他又被分为两类
+ 		1.sessionStorage（这个只是临时保存的，关闭就销毁） 
+ 		2.localStorage（这个是可以在规定时间里保存的
+）</p>
+<p>
+	sessionStorage的使用：
+		1.保存数据（sessionStorage.setItem(key,value)）。
+		3.读取数据（变量 = sessionStorage.getItem(key）
+</p>
+<p>
+	localStorage的使用：
+		1.保存数据（localStorage.setItem(key,value)）。
+		3.读取数据（变量 = localStorage.getItem(key）
+</p>
+<p>
+	页面之间的跨域通信：
+
+	窗口对象通过window.postMessage(数据,url);就可以相对应的url发送Data。
+	通过window上的message事件的监听，我们可以拿到对应的事件对象ev，ev.origin代表的就是发送源的url，ev.data 代表的就是发送的数据，ev.source代表的就是发送源对象。
+</p>
+<p>
+	Web Sockets 通信：（他实现了HTTP不易实现服务器端数据推送，就是持续链接）
+	首先创建一个 websocket 对象 new WebSockets("ws:localhost:8000/socket");
+	注意：在url前面需要加上ws    ！！！！！
+
+	socket对象的send方法只能发送的是文本数据，但我们却可以把js对象通过JSON.toStringify()来将对象转换为文本数据。
+
+	当我们获取了url相应的socket对象之后就可以去监听 onmessage  事件来获取事件句柄对象 用来拿到服务发送的数据 ev.data
+
+	socket对象的onopen用来监听socket的打开事件？
+
+	socket对象的onclose用来监听socket的关闭事件
+
+</p>
+<p>
+	sqllite
+	json.toStringify();
+</p>
+
+
+<p>
+	workers处理线程（应为浏览器的js解释器是单线程的所以当有比较好时的运算出现时就会出现卡死）。
+
+	1.首先是创建线程 var worker = new Worker("对应脚本的url");
+	注意：在这个脚本里是不能对window 和document进行操作的否则就会报错。
+
+	2.后台线程脚本所需要的数据可以通过 worker.postMessage(data) 传递
+	同时后台脚本的数据也可以通过相同的方法向worker对象传递数据 只要写一个onmessage的监听函数 就可以监听到
+
+	总的来说  就是通过postMessage相互传递数据，通过onmessage来监听 获取传递的数据
+
+	3.对于比较大的线程我们可以通过线程的嵌套来拆分成小的线程
+
+</p>
+</body>
+</html>
